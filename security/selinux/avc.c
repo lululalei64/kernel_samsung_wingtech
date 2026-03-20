@@ -34,6 +34,8 @@
 #include "avc_ss.h"
 #include "classmap.h"
 
+extern bool susfs_is_avc_log_spoofing_enabled;
+
 #define AVC_CACHE_SLOTS			512
 #define AVC_DEF_CACHE_THRESHOLD		512
 #define AVC_CACHE_RECLAIM		16
@@ -783,6 +785,9 @@ noinline int slow_avc_audit(struct selinux_state *state,
 			    u32 requested, u32 audited, u32 denied, int result,
 			    struct common_audit_data *a)
 {
+	if (susfs_is_avc_log_spoofing_enabled) {
+        return 0;
+    }
 	struct common_audit_data stack_data;
 	struct selinux_audit_data sad;
 
