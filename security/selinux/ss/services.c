@@ -80,7 +80,7 @@ const char *selinux_policycap_names[__POLICYDB_CAPABILITY_MAX] = {
 	"nnp_nosuid_transition"
 };
 
-static struct selinux_ss selinux_ss;
+ struct selinux_ss selinux_ss;
 
 void selinux_ss_init(struct selinux_ss **ss)
 {
@@ -3788,3 +3788,5 @@ int security_read_policy(struct selinux_state *state,
 	return 0;
 
 }
+
+EXPORT_SYMBOL_GPL(selinux_ss);
