@@ -39,6 +39,49 @@ struct hashtab *hashtab_create(u32 (*hash_value)(struct hashtab *h, const void *
 	return p;
 }
 
+int hashtab_duplicate(struct hashtab *new, struct hashtab *orig,
+		      int (*copy)(struct hashtab_node *new,
+				  struct hashtab_node *orig, void *args),
+		      int (*destroy)(void *key, void *datum, void *args),
+		      void *args)
+{
+	struct hashtab_node *cur, *new_node;
+	int j, rc;
+
+	new->size = orig->size;
+	new->nel = 0;
+	new->hash_value = orig->hash_value;
+	new->keycmp = orig->keycmp;
+	new->htable = kcalloc(new->size, sizeof(*(new->htable)), GFP_KERNEL);
+	if (!new->htable)
+		return -ENOMEM;
+
+	for (j = 0; j < orig->size; j++) {
+		cur = orig->htable[j];
+		while (cur) {
+			new_node = kmem_cache_zalloc(hashtab_node_cachep, GFP_KERNEL);
+			if (!new_node)
+				goto error;
+			
+			rc = copy(new_node, cur, args);
+			if (rc) {
+				kmem_cache_free(hashtab_node_cachep, new_node);
+				goto error;
+			}
+			
+			new_node->next = new->htable[j];
+			new->htable[j] = new_node;
+			new->nel++;
+			cur = cur->next;
+		}
+	}
+	return 0;
+
+error:
+	hashtab_destroy(new);
+	return -ENOMEM;
+}
+
 int hashtab_insert(struct hashtab *h, void *key, void *datum)
 {
 	u32 hvalue;
