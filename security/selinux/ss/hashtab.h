@@ -44,6 +44,11 @@ struct hashtab *hashtab_create(u32 (*hash_value)(struct hashtab *h, const void *
 			       int (*keycmp)(struct hashtab *h, const void *key1, const void *key2),
 			       u32 size);
 
+int hashtab_duplicate(struct hashtab *new, struct hashtab *orig,
+		      			int (*copy)(struct hashtab_node *new,
+				  					struct hashtab_node *orig, void *args),
+		      			int (*destroy)(void *key, void *datum, void *args),
+		      			void *args);
 /*
  * Inserts the specified (key, datum) pair into the specified hash table.
  *
