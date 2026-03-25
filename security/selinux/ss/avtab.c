@@ -657,6 +657,33 @@ int avtab_write(struct policydb *p, struct avtab *a, void *fp)
 	return rc;
 }
 
+int avtab_alloc_dup(struct avtab *new, struct avtab *orig)
+{
+	int i;
+
+	new->nel = 0;
+	new->nslot = orig->nslot;
+	new->mask = orig->mask;
+
+	new->htable = flex_array_alloc(sizeof(struct avtab_node *),
+				       new->nslot, GFP_KERNEL);
+	if (!new->htable)
+		return -ENOMEM;
+
+	if (flex_array_prealloc(new->htable, 0, new->nslot, GFP_KERNEL)) {
+		flex_array_free(new->htable);
+		return -ENOMEM;
+	}
+
+	for (i = 0; i < new->nslot; i++) {
+		struct avtab_node **slot = flex_array_get(new->htable, i);
+		if (slot)
+			*slot = NULL;
+	}
+
+	return 0;
+}
+
 void __init avtab_cache_init(void)
 {
 	avtab_node_cachep = kmem_cache_create("avtab_node",
